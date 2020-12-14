@@ -3,8 +3,6 @@ import numpy as np
 from time import perf_counter as pf
 
 
-
-run = True
 W = 1000
 theta = np.pi/2
 t = np.tan(theta/2)
@@ -17,7 +15,18 @@ pg.font.init()
 font = pg.font.SysFont("georgia", 20)
 
 
-clrs = {0:(255, 0, 0), 1:(0, 255, 0), 2:(255, 255, 0), 3:(255, 135, 0), 4:(0, 0, 255), 5:(255, 255, 255)}
+"""
+initial parameters:
+0 -> left, red
+1 -> front, green
+2 -> top, yellow
+3 -> right, orange
+4 -> back, blue
+5 -> bottom, white
+"""
+
+
+clrs = {0:(255, 0, 38), 1:(36, 255, 50), 2:(255, 238, 0), 3:(255, 100, 0), 4:(21, 113, 243), 5:(255, 255, 255)}
 colors = np.zeros((54, 3))
 for i in clrs.keys():
 	colors[i*9:i*9+9] = clrs[i]
@@ -37,15 +46,8 @@ def change_front(face):
 		colors[[53,50,47,46,45,48,51,52]] = colors[[47,46,45,48,51,52,53,50]]
 		alpha -= np.pi/2
 
-"""
-0 -> left, red
-1 -> front, green
-2 -> top, yellow
-3 -> right, orange
-4 -> back, blue
-5 -> bottom, white
-"""
 
+# creating the cube
 s = 50		# size of each cube
 surfaces = np.zeros((6, 3, 3, 4, 3))	# 6 faces, 3x3 squares each, 4 (x,y,z) coordinates for each squares
 # left face, centre
@@ -89,6 +91,7 @@ surfaces[5, ..., 0] *= -1
 
 
 # cube functions (moves)
+# f (before every move name) means fast lol
 def fu():
 	colors[[0,3,6,9,12,15,27,30,33,36,39,42]] = colors[[9,12,15,27,30,33,36,39,42,0,3,6]]
 	colors[[18,19,20,23,26,25,24,21]] = colors[[20,23,26,25,24,21,18,19]]
@@ -150,7 +153,6 @@ def fb_():
 	print("B'", end=' ')
 
 
-
 moves = {0:fu, 1:fd, 2:fl, 3:fr, 4:ff, 5:fb, 6:fu_, 7:fd_, 8:fl_, 9:fr_, 10:ff_, 11:fb_, 12:change_front}
 taken = []
 
@@ -175,59 +177,160 @@ def solve():
 	taken.clear()
 	print()
 
+def undo():
+	pass
 
 # animations
-def u():
-	# rotates top face clockwise
+def u_animate(ang):
+	# rotates top face by the given angle
 	h = (surfaces[[0, 1, 3, 4], :, 0, :, 0]**2 + surfaces[[0, 1, 3, 4], :, 0, :, 2]**2)**0.5
 	a = np.arctan(surfaces[[0, 1, 3, 4], :, 0, :, 2] / (surfaces[[0, 1, 3, 4], :, 0, :, 0] + 1e-8))
 	c = np.where(surfaces[[0, 1, 3, 4], :, 0, :, 0]>=0, 1, -1)
-	a -= np.pi/2/30
+	a -= ang
 	surfaces[[0, 1, 3, 4], :, 0, :, 0] = c*h*np.cos(a)
 	surfaces[[0, 1, 3, 4], :, 0, :, 2] = c*h*np.sin(a)
 
-	h = (surfaces[2, :, :, :, 0]**2 + surfaces[2, :, :, :, 2]**2)**0.5
-	a = np.arctan(surfaces[2, :, :, :, 2] / (surfaces[2, :, :, :, 0] + 1e-8))
-	c = np.where(surfaces[2, :, :, :, 0]>=0, 1, -1)
-	a -= np.pi/2/30
-	surfaces[2, :, :, :, 0] = c*h*np.cos(a)
-	surfaces[2, :, :, :, 2] = c*h*np.sin(a)
+	h = (surfaces[2, ..., 0]**2 + surfaces[2, ..., 2]**2)**0.5
+	a = np.arctan(surfaces[2, ..., 2] / (surfaces[2, ..., 0] + 1e-8))
+	c = np.where(surfaces[2, ..., 0]>=0, 1, -1)
+	a -= ang
+	surfaces[2, ..., 0] = c*h*np.cos(a)
+	surfaces[2, ..., 2] = c*h*np.sin(a)
 
-
-def d():
-	# rotates bottom face clockwise
+def d_animate(ang):
+	# rotates bottom face by the given angle
 	h = (surfaces[[0, 1, 3, 4], :, 2, :, 0]**2 + surfaces[[0, 1, 3, 4], :, 2, :, 2]**2)**0.5
 	a = np.arctan(surfaces[[0, 1, 3, 4], :, 2, :, 2] / (surfaces[[0, 1, 3, 4], :, 2, :, 0] + 1e-8))
 	c = np.where(surfaces[[0, 1, 3, 4], :, 2, :, 0]>=0, 1, -1)
-	a += np.pi/2/30
+	a += ang
 	surfaces[[0, 1, 3, 4], :, 2, :, 0] = c*h*np.cos(a)
 	surfaces[[0, 1, 3, 4], :, 2, :, 2] = c*h*np.sin(a)
 
-	h = (surfaces[5, :, :, :, 0]**2 + surfaces[5, :, :, :, 2]**2)**0.5
-	a = np.arctan(surfaces[5, :, :, :, 2] / (surfaces[5, :, :, :, 0] + 1e-8))
-	c = np.where(surfaces[5, :, :, :, 0]>=0, 1, -1)
-	a += np.pi/2/30
-	surfaces[5, :, :, :, 0] = c*h*np.cos(a)
-	surfaces[5, :, :, :, 2] = c*h*np.sin(a)
+	h = (surfaces[5, ..., 0]**2 + surfaces[5, ..., 2]**2)**0.5
+	a = np.arctan(surfaces[5, ..., 2] / (surfaces[5, ..., 0] + 1e-8))
+	c = np.where(surfaces[5, ..., 0]>=0, 1, -1)
+	a += ang
+	surfaces[5, ..., 0] = c*h*np.cos(a)
+	surfaces[5, ..., 2] = c*h*np.sin(a)
 
-
-def l():
+def l_animate(ang):
 	x = np.array([surfaces[1, 0], surfaces[5, 2], surfaces[4, 2], surfaces[2, 0]])	# (4, 3, 4, 3)
 	h = (x[..., 1]**2 + x[..., 2]**2)**0.5
 	a = np.arctan(x[..., 2] / (x[..., 1] + 1e-8))
 	c = np.where(x[..., 1]>=0, 1, -1)
-	a -= np.pi/2/30
+	a += ang
 	cos = c*h*np.cos(a)
 	sin = c*h*np.sin(a)
-	surfaces[1, 0, ..., 1], surfaces[5, 2, ..., 1], surfaces[4, 2, ..., 1], surfaces[2, 0, ..., 1] = cos[0], cos[1], cos[2], cos[3]
-	surfaces[1, 0, ..., 2], surfaces[5, 2, ..., 2], surfaces[4, 2, ..., 2], surfaces[2, 0, ..., 2] = sin[0], sin[1], sin[2], sin[3]
+	surfaces[1, 0, ..., 1], surfaces[5, 2, ..., 1], surfaces[4, 2, ..., 1], surfaces[2, 0, ..., 1] = cos
+	surfaces[1, 0, ..., 2], surfaces[5, 2, ..., 2], surfaces[4, 2, ..., 2], surfaces[2, 0, ..., 2] = sin
 
 	h = (surfaces[0, ..., 1]**2 + surfaces[0, ..., 2]**2)**0.5
 	a = np.arctan(surfaces[0, ..., 2] / (surfaces[0, ..., 1] + 1e-8))
 	c = np.where(surfaces[0, ..., 1]>=0, 1, -1)
-	a -= np.pi/2/30
+	a += ang
 	surfaces[0, ..., 1] = c*h*np.cos(a)
 	surfaces[0, ..., 2] = c*h*np.sin(a)
+
+def r_animate(ang):
+	x = np.array([surfaces[1, 2], surfaces[5, 0], surfaces[4, 0], surfaces[2, 2]])	# (4, 3, 4, 3)
+	h = (x[..., 1]**2 + x[..., 2]**2)**0.5
+	a = np.arctan(x[..., 2] / (x[..., 1] + 1e-8))
+	c = np.where(x[..., 1]>=0, 1, -1)
+	a -= ang
+	cos = c*h*np.cos(a)
+	sin = c*h*np.sin(a)
+	surfaces[1, 2, ..., 1], surfaces[5, 0, ..., 1], surfaces[4, 0, ..., 1], surfaces[2, 2, ..., 1] = cos
+	surfaces[1, 2, ..., 2], surfaces[5, 0, ..., 2], surfaces[4, 0, ..., 2], surfaces[2, 2, ..., 2] = sin
+
+	h = (surfaces[3, ..., 1]**2 + surfaces[3, ..., 2]**2)**0.5
+	a = np.arctan(surfaces[3, ..., 2] / (surfaces[3, ..., 1] + 1e-8))
+	c = np.where(surfaces[3, ..., 1]>=0, 1, -1)
+	a -= ang
+	surfaces[3, ..., 1] = c*h*np.cos(a)
+	surfaces[3, ..., 2] = c*h*np.sin(a)
+
+def f_animate(ang):
+	h = (surfaces[1, ..., 0]**2 + surfaces[1, ..., 1]**2)**0.5
+	a = np.arctan(surfaces[1, ..., 1] / (surfaces[1, ..., 0] + 1e-8))
+	c = np.where(surfaces[1, ..., 2]>=0, 1, -1)
+	a -= ang
+	surfaces[1, ..., 1] = c*h*np.cos(a)
+	surfaces[1, ..., 0] = c*h*np.sin(a)
+
+def b_animate(ang):
+	pass
+
+
+"""
+initial parameters:
+0 -> left, red
+1 -> front, green
+2 -> top, yellow
+3 -> right, orange
+4 -> back, blue
+5 -> bottom, white
+"""
+
+moves_animate = {0:u_animate, 1:d_animate, 2:l_animate, 3:r_animate, 4:f_animate, 5:b_animate}
+
+def turn_face(face, angle):
+	if face<6:
+		moves_animate[face](angle)
+	else:
+		moves_animate[face-6](-angle)
+
+
+# def u():
+# 	# rotates top face clockwise
+# 	h = (surfaces[[0, 1, 3, 4], :, 0, :, 0]**2 + surfaces[[0, 1, 3, 4], :, 0, :, 2]**2)**0.5
+# 	a = np.arctan(surfaces[[0, 1, 3, 4], :, 0, :, 2] / (surfaces[[0, 1, 3, 4], :, 0, :, 0] + 1e-8))
+# 	c = np.where(surfaces[[0, 1, 3, 4], :, 0, :, 0]>=0, 1, -1)
+# 	a -= np.pi/2/30
+# 	surfaces[[0, 1, 3, 4], :, 0, :, 0] = c*h*np.cos(a)
+# 	surfaces[[0, 1, 3, 4], :, 0, :, 2] = c*h*np.sin(a)
+
+# 	h = (surfaces[2, :, :, :, 0]**2 + surfaces[2, :, :, :, 2]**2)**0.5
+# 	a = np.arctan(surfaces[2, :, :, :, 2] / (surfaces[2, :, :, :, 0] + 1e-8))
+# 	c = np.where(surfaces[2, :, :, :, 0]>=0, 1, -1)
+# 	a -= np.pi/2/30
+# 	surfaces[2, :, :, :, 0] = c*h*np.cos(a)
+# 	surfaces[2, :, :, :, 2] = c*h*np.sin(a)
+
+
+# def d():
+# 	# rotates bottom face clockwise
+# 	h = (surfaces[[0, 1, 3, 4], :, 2, :, 0]**2 + surfaces[[0, 1, 3, 4], :, 2, :, 2]**2)**0.5
+# 	a = np.arctan(surfaces[[0, 1, 3, 4], :, 2, :, 2] / (surfaces[[0, 1, 3, 4], :, 2, :, 0] + 1e-8))
+# 	c = np.where(surfaces[[0, 1, 3, 4], :, 2, :, 0]>=0, 1, -1)
+# 	a += np.pi/2/30
+# 	surfaces[[0, 1, 3, 4], :, 2, :, 0] = c*h*np.cos(a)
+# 	surfaces[[0, 1, 3, 4], :, 2, :, 2] = c*h*np.sin(a)
+
+# 	h = (surfaces[5, :, :, :, 0]**2 + surfaces[5, :, :, :, 2]**2)**0.5
+# 	a = np.arctan(surfaces[5, :, :, :, 2] / (surfaces[5, :, :, :, 0] + 1e-8))
+# 	c = np.where(surfaces[5, :, :, :, 0]>=0, 1, -1)
+# 	a += np.pi/2/30
+# 	surfaces[5, :, :, :, 0] = c*h*np.cos(a)
+# 	surfaces[5, :, :, :, 2] = c*h*np.sin(a)
+
+
+# def l():
+# 	x = np.array([surfaces[1, 0], surfaces[5, 2], surfaces[4, 2], surfaces[2, 0]])	# (4, 3, 4, 3)
+# 	h = (x[..., 1]**2 + x[..., 2]**2)**0.5
+# 	a = np.arctan(x[..., 2] / (x[..., 1] + 1e-8))
+# 	c = np.where(x[..., 1]>=0, 1, -1)
+# 	a -= np.pi/2/30
+# 	cos = c*h*np.cos(a)
+# 	sin = c*h*np.sin(a)
+# 	surfaces[1, 0, ..., 1], surfaces[5, 2, ..., 1], surfaces[4, 2, ..., 1], surfaces[2, 0, ..., 1] = cos[0], cos[1], cos[2], cos[3]
+# 	surfaces[1, 0, ..., 2], surfaces[5, 2, ..., 2], surfaces[4, 2, ..., 2], surfaces[2, 0, ..., 2] = sin[0], sin[1], sin[2], sin[3]
+
+# 	h = (surfaces[0, ..., 1]**2 + surfaces[0, ..., 2]**2)**0.5
+# 	a = np.arctan(surfaces[0, ..., 2] / (surfaces[0, ..., 1] + 1e-8))
+# 	c = np.where(surfaces[0, ..., 1]>=0, 1, -1)
+# 	a -= np.pi/2/30
+# 	surfaces[0, ..., 1] = c*h*np.cos(a)
+# 	surfaces[0, ..., 2] = c*h*np.sin(a)
 
 
 def check_solve():
@@ -240,23 +343,22 @@ def check_solve():
 	return True
 
 
-
 # drawing
 def draw_surface(s, v):
 	# s -> 4, 2-D coordinates in cyclic order
 
 	pg.draw.polygon(win, colors[v], s)
 	for i in range(3):
-		pg.draw.line(win, (32, 32, 32), s[i], s[i+1])
-	pg.draw.line(win, (32, 32, 32), s[0], s[3])
-	if v==13:
-		t = font.render("Front", True, (0,0,0))
-		win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
-	if v==22:
-		t = font.render("Up", True, (0,0,0))
-		win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
-	# t = font.render(str(v), True, (0,0,0))
-	# win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
+		pg.draw.line(win, (32, 32, 32), s[i], s[i+1], 6)
+	pg.draw.line(win, (32, 32, 32), s[0], s[3], 6)
+	# if v==13:
+	# 	t = font.render("Front", True, (0,0,0))
+	# 	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
+	# if v==22:
+	# 	t = font.render("Up", True, (0,0,0))
+	# 	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
+	t = font.render(str(v), True, (0,0,0))
+	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
 	
 
 def draw():
@@ -271,6 +373,9 @@ def draw():
 	for k in reversed(z):
 		v = dc[k]
 		draw_surface(cube[v], v)
+	for i, s in enumerate(string):
+		t = font.render(s, True, clrs[5])
+		win.blit(t, (10, 10+i*25))
 	pg.display.update()
 
 
@@ -296,13 +401,21 @@ def project_surfaces(cube):
 alpha, beta = np.pi/4 + 0.01, -np.pi/4 + 0.01
 inc = 0.02
 fps = 0
+# up_timer = down_timer = left_timer = right_timer = front_timer = back_timer = 0
+# up_timer_ = down_timer_ = left_timer_ = right_timer_ = front_timer_ = back_timer_ = 0
+# key_press = np.zeros(12, dtype=bool)
 timer = 0
-up = down = left = right = front = back = False
+turn_speed = 30
+# up = down = left = right = front = back = False
+# up_ = down_ = left_ = right_ = front_ = back_ = False
 wait = 150
 interval = 0
 p_interval = 0
+run = True
 
-done=False
+
+print("Rotate cube: Arrow Keys\nShuffle: SHIFT + S\nSolve: CTRL + S\nMoves (clockwise): F B R L D B\nMoves (anti-clockwise): SHIFT + (F B R L D B)")
+string = ["Rotate cube: Arrow Keys", "Shuffle: SHIFT + S", "Solve: CTRL + S", "Moves (clockwise): F B R L D B", "Moves (anti-clockwise): SHIFT + (F B R L D B)"]
 
 while run:
 	for event in pg.event.get():
@@ -319,88 +432,65 @@ while run:
 	elif keyp[pg.K_RIGHT]:
 		alpha -= inc
 
-	if keyp[pg.K_u]:
-		up = True
-	if keyp[pg.K_d]:
-		down = True
-	if keyp[pg.K_l]:
-		left = True
-	if keyp[pg.K_r]:
-		right = True
-	if keyp[pg.K_f]:
-		front = True
-	if keyp[pg.K_b]:
-		back = True
+	if keyp[pg.K_u] and timer==0:
+		if keyp[pg.K_LSHIFT] or keyp[pg.K_RSHIFT]:
+			n = 6
+		else:
+			n = 0
+		timer = 1
+	if keyp[pg.K_d] and timer==0:
+		if keyp[pg.K_LSHIFT] or keyp[pg.K_RSHIFT]:
+			n = 7
+		else:
+			n = 1
+		timer = 1
+	if keyp[pg.K_l] and timer==0:
+		if keyp[pg.K_LSHIFT] or keyp[pg.K_RSHIFT]:
+			n = 8
+		else:
+			n = 2
+		timer = 1
+	if keyp[pg.K_r] and timer==0:
+		if keyp[pg.K_LSHIFT] or keyp[pg.K_RSHIFT]:
+			n = 9
+		else:
+			n = 3
+		timer = 1
+	if keyp[pg.K_f] and timer==0:
+		if keyp[pg.K_LSHIFT] or keyp[pg.K_RSHIFT]:
+			n = 10
+		else:
+			n = 4
+		timer = 1
+	if keyp[pg.K_b] and timer==0:
+		if keyp[pg.K_LSHIFT] or keyp[pg.K_RSHIFT]:
+			n = 11
+		else:
+			n = 5
+		timer = 1
+
 
 	if keyp[pg.K_s] and keyp[pg.K_LSHIFT]:
 		shuffle()
 		pg.time.delay(wait)
 
-	if keyp[pg.K_s] and keyp[pg.K_LCTRL]:
-		solve()
-		alpha, beta = np.pi/4 + 0.01, -np.pi/4 + 0.01
+	if keyp[pg.K_LCTRL]:
+		if keyp[pg.K_s]:
+			solve()
+			alpha, beta = np.pi/4 + 0.01, -np.pi/4 + 0.01
+		elif keyp[pg.K_z]:
+			undo()
 
 	fps = pf()
 
-	if up:
-		if keyp[pg.K_LSHIFT] or keyp[pg.K_RSHIFT]:
-			fu_()
-			taken.append(6)
-		else:
-			fu()
-			taken.append(0)
-		up = False
-		pg.time.delay(wait)
-
-	if down:
-		if keyp[pg.K_LSHIFT] or keyp[pg.K_RSHIFT]:
-			fd_()
-			taken.append(7)
-		else:
-			fd()
-			taken.append(1)
-		down = False
-		pg.time.delay(wait)
-
-	if left:
-		if keyp[pg.K_LSHIFT] or keyp[pg.K_RSHIFT]:
-			fl_()
-			taken.append(8)
-		else:
-			fl()
-			taken.append(2)
-		left = False
-		pg.time.delay(wait)
-
-	if right:
-		if keyp[pg.K_LSHIFT] or keyp[pg.K_RSHIFT]:
-			fr_()
-			taken.append(9)
-		else:
-			fr()
-			taken.append(3)
-		right = False
-		pg.time.delay(wait)
-
-	if front:
-		if keyp[pg.K_LSHIFT] or keyp[pg.K_RSHIFT]:
-			ff_()
-			taken.append(10)
-		else:
-			ff()
-			taken.append(4)
-		front = False
-		pg.time.delay(wait)
-
-	if back:
-		if keyp[pg.K_LSHIFT] or keyp[pg.K_RSHIFT]:
-			fb_()
-			taken.append(11)
-		else:
-			fb()
-			taken.append(5)
-		back = False
-		pg.time.delay(wait)
+	if timer>0:
+		turn_face(n, np.pi/turn_speed/2)
+		timer += 1
+		if timer == turn_speed+1:
+			timer = 0
+			turn_face(n, -np.pi/2)
+			taken.append(n)
+			moves[n]()
 
 
 	if alpha > 2*np.pi or alpha < -2*np.pi:
@@ -410,16 +500,15 @@ while run:
 	if beta < -np.pi/2:
 		beta = -np.pi/2 + 0.01
 
-	interval = int(2*(alpha+(1 if alpha>0 else -1)*np.pi/4)/np.pi)%4
-	if interval>p_interval:
-		change_front(0)
-		taken.append(12)
+	# interval = int(2*(alpha+(1 if alpha>0 else -1)*np.pi/4)/np.pi)%4
+	# if interval>p_interval:
+	# 	change_front(0)
+	# 	taken.append(12)
 	
 	draw()
 
 	# if pf()%1 < 0.01:
 	# 	print(f"FPS: {round(1/(pf()-fps))}")
-	# print(alpha)
 
 
 
@@ -457,4 +546,13 @@ else:
 		surfaces[[0, 1, 3, 4], :, 2] = surfaces[[4, 0, 1, 3], :, 2]
 		colors[[2,5,8,11,14,17,29,32,35,38,41,44]] = colors[[38,41,44,2,5,8,11,14,17,29,32,35]]
 	left_timer = 0
+"""
+
+
+""" 
+to add:
+	undo
+	redo
+	animations
+	AI to solve
 """
