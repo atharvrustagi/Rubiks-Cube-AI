@@ -17,7 +17,6 @@ pg.font.init()
 font = pg.font.SysFont("georgia", 20)
 
 
-
 # creating the cube
 s = 50		# size of each cube
 surfaces = np.zeros((6, 3, 3, 4, 3))	# 6 faces, 3x3 squares each, 4 (x,y,z) coordinates for each squares
@@ -94,7 +93,7 @@ def shuffle():
 def solve():
 	print()
 	global alpha, beta
-	for x in reversed(taken):
+	for x in taken[::-1]:
 		if x==12:
 			moves[12](1, colors)
 			alpha -= np.pi/2
@@ -157,9 +156,18 @@ def draw():
 	for k in reversed(z):
 		v = dc[k]
 		draw_surface(cube[v], v)
-	for i, s in enumerate(string):
+	for i, s in enumerate(instructions):
 		t = font.render(s, True, clrs[5])
 		win.blit(t, (10, 10+i*25))
+
+	global fps_disp
+	fps_text = font.render("FPS: " + str(fps_disp), True, (255, 255, 255))
+	win.blit(fps_text, (W-fps_text.get_width()-10, fps_text.get_height()+10))
+
+	if pf()%1<0.01:
+		fps_disp = round(1/(pf()-fps))
+		win.blit(fps_text, (W-fps_text.get_width()-10, fps_text.get_height()+10))
+
 	pg.display.update()
 
 def project_surfaces(cube):
@@ -188,10 +196,11 @@ timer = 0										# counts frames elapsed per turn
 turn_speed = 25									# less is more (it is actually the number of frames spent per turn)
 wait = 150										# wait (in msec) after some functions
 interval = p_interval = 0						# for changing front-face on rotation
+fps_disp = 0
 
-
-print("Rotate cube: Arrow Keys\nShuffle: SHIFT + S\nSolve: CTRL + S\nMoves (clockwise): F B R L D B\nMoves (anti-clockwise): SHIFT + (F B R L D B)")
-string = ["Rotate cube: Arrow Keys", "Shuffle: SHIFT + S", "Solve: CTRL + S", "Moves (clockwise): F B R L D B", "Moves (anti-clockwise): SHIFT + (F B R L D B)"]
+instructions = ["Rotate cube: Arrow Keys", "Shuffle: SHIFT + S", "Solve: CTRL + S", "Moves (clockwise): F B R L D B", "Moves (anti-clockwise): SHIFT + (F B R L D B)"]
+for i in instructions:
+	print(i)
 
 while run:
 	for event in pg.event.get():
@@ -220,7 +229,7 @@ while run:
 	elif keyp[pg.K_LCTRL] or keyp[pg.K_RCTRL]:
 		if keyp[pg.K_s]:
 			solve()
-			alpha, beta = np.pi/4 + 0.01, -np.pi/4 + 0.01
+			# alpha, beta = np.pi/4 + 0.01, -np.pi/4 + 0.01
 		elif keyp[pg.K_z]:
 			undo()
 
@@ -250,9 +259,6 @@ while run:
 		taken.append(12)
 	
 	draw()
-
-	# if pf()%1 < 0.01:
-	# 	print(f"FPS: {round(1/(pf()-fps))}")
 
 
 """ 
