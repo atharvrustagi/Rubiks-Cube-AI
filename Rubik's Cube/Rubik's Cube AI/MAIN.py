@@ -8,34 +8,29 @@ from AI import *
 _ = system("cls")
 
 
-def play(moves_to_take):
+def play(moves_to_take, anim=True):
 	global alpha, beta
 	for x in moves_to_take:
 		if x<12:
-			for _ in range(turn_speed):
-				for event in pg.event.get():
-					if event.type == pg.QUIT:
-						exit()
+			if anim:
+				for _ in range(turn_speed):
+					for event in pg.event.get():
+						if event.type == pg.QUIT:
+							exit()
 
-				keyp = pg.key.get_pressed()
-				if keyp[pg.K_UP]:
-					beta += inc
-				elif keyp[pg.K_DOWN]:
-					beta -= inc
-				if keyp[pg.K_LEFT]:
-					alpha += inc
-				elif keyp[pg.K_RIGHT]:
-					alpha -= inc
-				if alpha > 2*np.pi or alpha < -2*np.pi:
-					alpha = 0
-				if beta > np.pi/2:
-					beta = np.pi/2 + 0.01
-				if beta < -np.pi/2:
-					beta = -np.pi/2 + 0.01
+					keyp = pg.key.get_pressed()
+					if keyp[pg.K_UP]:
+						beta += inc
+					elif keyp[pg.K_DOWN]:
+						beta -= inc
+					if keyp[pg.K_LEFT]:
+						alpha += inc
+					elif keyp[pg.K_RIGHT]:
+						alpha -= inc
+					turn_face(x, np.pi/turn_speed/2, surfaces)
+					draw()
+				turn_face(x, -np.pi/2, surfaces)
 
-				turn_face(x, np.pi/turn_speed/2, surfaces)
-				draw()
-			turn_face(x, -np.pi/2, surfaces)
 			moves[x](colors)
 		elif x==12:
 			change_front(0, colors)
@@ -50,14 +45,13 @@ def cross():
 
 	moves_to_take = []
 
-	while not np.all(s_cube[46:53:2]==255):
+	while not np.all(s_cube[19:26:2]==255):
 		# identifying white edge piece
 		idx = -1
-		for i, c in enumerate(s_cube[:45]):
+		for i, c in enumerate(np.concatenate((s_cube[:18], s_cube[27:]))):
 			if (i%9)%2==1 and np.all(c==255):
-				idx = i
+				idx = i if i<18 else i+9
 				break
-
 
 		# if white edge piece is on the sides
 		if (idx>=0 and idx<18) or (idx>=27 and idx<45):
@@ -83,69 +77,68 @@ def cross():
 			# checking if the move to take is already occupied
 			fidx = (idx%9)+9
 			if fidx==10:
-				while np.all(s_cube[52]==255):
-					fd(s_cube)
-					moves_to_take.append(1)
-				fl(s_cube)
-				moves_to_take.append(2)
+				while np.all(s_cube[19]==255):
+					fu(s_cube)
+					moves_to_take.append(0)
+				fl_(s_cube)
+				moves_to_take.append(8)
 			elif fidx==16:
-				while np.all(s_cube[46]==255):
-					fd(s_cube)
-					moves_to_take.append(1)
-				fr_(s_cube)
-				moves_to_take.append(9)
+				while np.all(s_cube[25]==255):
+					fu(s_cube)
+					moves_to_take.append(0)
+				fr(s_cube)
+				moves_to_take.append(3)
 			elif fidx==12:
-				while np.all(s_cube[50]==255):
-					fd(s_cube)
-					moves_to_take.append(1)
+				while np.all(s_cube[23]==255):
+					fu(s_cube)
+					moves_to_take.append(0)
 				ff(s_cube)
-				fd(s_cube)
-				fr_(s_cube)
+				fu_(s_cube)
+				fr(s_cube)
 				moves_to_take.append(4)
-				moves_to_take.append(1)
-				moves_to_take.append(9)
+				moves_to_take.append(6)
+				moves_to_take.append(3)
 			elif fidx==14:
-				while np.all(s_cube[50]==255):
-					fd(s_cube)
-					moves_to_take.append(1)
+				while np.all(s_cube[23]==255):
+					fu(s_cube)
+					moves_to_take.append(0)
 				ff_(s_cube)
-				fd(s_cube)
-				fr_(s_cube)
+				fu_(s_cube)
+				fr(s_cube)
 				moves_to_take.append(10)
-				moves_to_take.append(1)
-				moves_to_take.append(9)
+				moves_to_take.append(6)
+				moves_to_take.append(3)
 
-
-		# if white edge piece is on the top face
+		# if white edge piece is on the bottom face
 		else:
-			if idx==23:
-				while np.all(s_cube[50]==255):
-					fd(s_cube)
-					moves_to_take.append(1)
+			if idx==50:
+				while np.all(s_cube[23]==255):
+					fu(s_cube)
+					moves_to_take.append(0)
 				ff(s_cube)
 				ff(s_cube)
 				moves_to_take.append(4)
 				moves_to_take.append(4)
-			elif idx==25:
-				while np.all(s_cube[46]==255):
-					fd(s_cube)
-					moves_to_take.append(1)
+			elif idx==46:
+				while np.all(s_cube[25]==255):
+					fu(s_cube)
+					moves_to_take.append(0)
 				fr(s_cube)
 				fr(s_cube)
 				moves_to_take.append(3)
 				moves_to_take.append(3)
-			elif idx==21:
-				while np.all(s_cube[48]==255):
-					fd(s_cube)
-					moves_to_take.append(1)
+			elif idx==48:
+				while np.all(s_cube[21]==255):
+					fu(s_cube)
+					moves_to_take.append(0)
 				fb(s_cube)
 				fb(s_cube)
 				moves_to_take.append(5)
 				moves_to_take.append(5)
-			elif idx==19:
-				while np.all(s_cube[52]==255):
-					fd(s_cube)
-					moves_to_take.append(1)
+			elif idx==52:
+				while np.all(s_cube[19]==255):
+					fu(s_cube)
+					moves_to_take.append(0)
 				fl(s_cube)
 				fl(s_cube)
 				moves_to_take.append(2)
@@ -154,11 +147,42 @@ def cross():
 	return moves_to_take
 
 
-def AI():
-	global alpha, beta
-	moves_to_take = cross()
-	play(moves_to_take)
+def align_cross():
+	moves_to_take = []
 
+	s_cube = np.copy(colors)
+
+	for _ in range(4):
+		while not (np.all(s_cube[12]==s_cube[13]) and np.all(s_cube[23]==255)):
+			fu(s_cube)
+			moves_to_take.append(0)
+		ff(s_cube)
+		ff(s_cube)
+		moves_to_take.append(4)
+		moves_to_take.append(4)
+
+		change_front(0, s_cube)
+		moves_to_take.append(12)
+
+	return moves_to_take
+
+
+def AI():
+	t = pf()
+	n = 0
+
+
+	moves_to_take = cross()
+	n += np.sum(np.array(moves_to_take)<12)
+	play(moves_to_take, 1)
+
+	moves_to_take = align_cross()
+	n += np.sum(np.array(moves_to_take)<12)
+	play(moves_to_take, 1)
+
+
+
+	print(f"Took {pf()-t} seconds and {n} moves to solve cross")
 
 
 
@@ -219,7 +243,6 @@ surfaces[5, ..., 1] += 6*s
 surfaces[5, ..., 0] *= -1
 
 
-taken = []
 
 """
 initial parameters:
@@ -241,32 +264,27 @@ def shuffle():
 	global alpha, beta
 	for i in range(25):
 		x = np.random.randint(0, 12)
-		for _ in range(turn_speed):
-			for event in pg.event.get():
-				if event.type == pg.QUIT:
-					exit()
+		# animating
+		if 1:
+			for _ in range(turn_speed):
+				for event in pg.event.get():
+					if event.type == pg.QUIT:
+						exit()
 
-			keyp = pg.key.get_pressed()
-			if keyp[pg.K_UP]:
-				beta += inc
-			elif keyp[pg.K_DOWN]:
-				beta -= inc
-			if keyp[pg.K_LEFT]:
-				alpha += inc
-			elif keyp[pg.K_RIGHT]:
-				alpha -= inc
-			if alpha > 2*np.pi or alpha < -2*np.pi:
-				alpha = 0
-			if beta > np.pi/2:
-				beta = np.pi/2 + 0.01
-			if beta < -np.pi/2:
-				beta = -np.pi/2 + 0.01
+				keyp = pg.key.get_pressed()
+				if keyp[pg.K_UP]:
+					beta += inc
+				elif keyp[pg.K_DOWN]:
+					beta -= inc
+				if keyp[pg.K_LEFT]:
+					alpha += inc
+				elif keyp[pg.K_RIGHT]:
+					alpha -= inc
 
-			turn_face(x, np.pi/turn_speed/2, surfaces)
-			draw()
-		turn_face(x, -np.pi/2, surfaces)
+				turn_face(x, np.pi/turn_speed/2, surfaces)
+				draw()
+			turn_face(x, -np.pi/2, surfaces)
 		moves[x](colors)
-		taken.append(x)
 
 		draw()
 	print()
@@ -278,14 +296,14 @@ def draw_surface(s, v):
 	for i in range(3):
 		pg.draw.line(win, (32, 32, 32), s[i], s[i+1], 6)
 	pg.draw.line(win, (32, 32, 32), s[0], s[3], 6)
-	if v==13:
-		t = font.render("Front", True, (0,0,0))
-		win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
-	if v==22:
-		t = font.render("Up", True, (0,0,0))
-		win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
-	t = font.render(str(v), True, (0,0,0))
-	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
+	# if v==13:
+	# 	t = font.render("Front", True, (0,0,0))
+	# 	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
+	# if v==22:
+	# 	t = font.render("Up", True, (0,0,0))
+	# 	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
+	# t = font.render(str(v), True, (0,0,0))
+	# win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
 	
 def draw():
 	win.fill((0, 0, 0))
@@ -323,8 +341,6 @@ def project_surfaces(cube):
 
 alpha, beta = np.pi/4 + 0.01, -np.pi/4 + 0.01				# default viewing angles
 inc = 0.02													# angle increase on pressing arrow keys
-fps = 0														# frames per second
-timer = 0													# counts frames elapsed per turn
 turn_speed = 25												# MUST BE A POWER OF 5 (5, 25, 125, 625...), less is more (it is actually the number of frames spent per turn)
 wait = 150													# wait (in msec) after some functions
 interval = p_interval = 0									# for changing front-face on rotation
@@ -344,43 +360,15 @@ while run:
 	elif keyp[pg.K_RIGHT]:
 		alpha -= inc
 
-	if timer==0:
-		n = -1		# move_to_play(colors)
-		if n>=0:
-			timer = 1
-
 	if keyp[pg.K_s] and (keyp[pg.K_LSHIFT]or keyp[pg.K_RSHIFT]):
 		shuffle()
 		pg.time.delay(wait)
 
 	if keyp[pg.K_s] and (keyp[pg.K_LCTRL] or keyp[pg.K_RCTRL]):
 		AI()
-		pg.time.delay(500)
-
-	fps = pf()
-
-	if timer>0:
-		turn_face(n, np.pi/turn_speed/2, surfaces)
-		timer += 1
-		if timer == turn_speed+1:
-			timer = 0
-			turn_face(n, -np.pi/2, surfaces)
-			surfaces = np.round(surfaces, -1)
-			taken.append(n)
-			moves[n](colors)
-	
-	if alpha > 2*np.pi or alpha < -2*np.pi:
-		alpha = 0
-	if beta > np.pi/2:
-		beta = np.pi/2 + 0.01
-	if beta < -np.pi/2:
-		beta = -np.pi/2 + 0.01
-
 
 	draw()
 
-	# if pf()%1 < 0.01:
-	# 	print(f"FPS: {round(1/(pf()-fps))}")
 
 
 """ 
