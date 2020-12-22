@@ -167,6 +167,179 @@ def align_cross():
 	return moves_to_take
 
 
+def corners():
+	moves_to_take = []
+	cube = np.copy(colors)
+	# checking the colors of the corners
+
+	def check():
+		for i in [4, 13, 31, 40]:
+			if not (np.all(cube[i]==cube[i-2]) and np.all(cube[i]==cube[i+4])):
+				return False
+		return True
+
+	# checking if corners are put correctly
+	while not (np.all(cube[[53, 47, 51, 45]]==255) and check()):
+		# finding the white corner piece
+		for i in range(54):
+			if (i%9)%2==0 and np.all(cube[i]==255) and i!=49:
+				idx = i
+				break
+		# if idx is in side faces
+		if (idx>=0 and idx<18) or (idx>=27 and idx<45):
+			# identifying which face to switch to
+			for f, l in enumerate(side_face_list):
+				if idx>=l[0] and idx<l[1]:
+					face = f
+					break
+
+			if face==0:
+				change_front(0, cube)
+				moves_to_take.append(12)
+			elif face==2:
+				change_front(1, cube)
+				moves_to_take.append(13)
+			elif face==3:
+				change_front(0, cube)
+				moves_to_take.append(12)
+				change_front(0, cube)
+				moves_to_take.append(12)
+
+			# switched to the correct face
+			fidx = idx%9 + 9
+			# checking which corner it is out of 4 possible cases
+			if fidx==9:		# top left
+				while not np.all(cube[[6, 20]]==cube[[4, 13]]):
+					fu(cube)
+					change_front(0, cube)
+					moves_to_take.append(0)
+					moves_to_take.append(12)
+				fu_(cube)
+				fl_(cube)
+				fu(cube)
+				fl(cube)
+				moves_to_take.append(6)
+				moves_to_take.append(8)
+				moves_to_take.append(0)
+				moves_to_take.append(2)
+			elif fidx==15:	# top right
+				while not np.all(cube[[26, 27]]==cube[[13, 31]]):
+					fu_(cube)
+					change_front(1, cube)
+					moves_to_take.append(6)
+					moves_to_take.append(13)
+				fu(cube)
+				fr(cube)
+				fu_(cube)
+				fr_(cube)
+				moves_to_take.append(0)
+				moves_to_take.append(3)
+				moves_to_take.append(6)
+				moves_to_take.append(9)
+			elif fidx==11:	# bottom left
+				# taking out the corner
+				fl_(cube)
+				fu(cube)
+				fl(cube)
+				moves_to_take.append(8)
+				moves_to_take.append(0)
+				moves_to_take.append(2)
+				# same as top left
+				while not np.all(cube[[6, 20]]==cube[[4, 13]]):
+					fu(cube)
+					change_front(0, cube)
+					moves_to_take.append(0)
+					moves_to_take.append(12)
+				fu_(cube)
+				fl_(cube)
+				fu(cube)
+				fl(cube)
+				moves_to_take.append(6)
+				moves_to_take.append(8)
+				moves_to_take.append(0)
+				moves_to_take.append(2)
+			elif fidx==17:	# bottom right
+				# taking out the corner
+				fr(cube)
+				fu_(cube)
+				fr_(cube)
+				moves_to_take.append(3)
+				moves_to_take.append(6)
+				moves_to_take.append(9)
+				# same as top right
+				while not np.all(cube[[26, 27]]==cube[[13, 31]]):
+					fu_(cube)
+					change_front(1, cube)
+					moves_to_take.append(6)
+					moves_to_take.append(13)
+				fu(cube)
+				fr(cube)
+				fu_(cube)
+				fr_(cube)
+				moves_to_take.append(0)
+				moves_to_take.append(3)
+				moves_to_take.append(6)
+				moves_to_take.append(9)
+
+		# if idx is in the top face
+		elif idx>=18 and idx<27:
+			# place the front such that corner is at bottom right wrt front
+			while not np.all(cube[26]==255):
+				change_front(0, cube)
+				moves_to_take.append(12)
+			# putting over the correct position
+			while not np.all(cube[[15, 27]]==cube[[31, 13]]):
+				fu(cube)
+				change_front(0, cube)
+				moves_to_take.append(0)
+				moves_to_take.append(12)
+			# putting at the correct position
+			fr(cube)
+			fu_(cube)
+			fr_(cube)
+			fu(cube)
+			ff_(cube)
+			fu(cube)
+			ff(cube)
+			moves_to_take.append(3)
+			moves_to_take.append(6)
+			moves_to_take.append(9)
+			moves_to_take.append(0)
+			moves_to_take.append(10)
+			moves_to_take.append(0)
+			moves_to_take.append(4)
+
+		# if idx is in the bottom face
+		elif idx>=45 and idx<54:
+			# change front such that white corner is in front right
+			while not np.all(cube[47]==255):
+				change_front(1, cube)
+				moves_to_take.append(13)
+			ff_(cube)
+			fu(cube)
+			ff(cube)
+			moves_to_take.append(10)
+			moves_to_take.append(0)
+			moves_to_take.append(4)
+			# now same as top right case of side face
+			while not np.all(cube[[26, 27]]==cube[[13, 31]]):
+				fu_(cube)
+				change_front(1, cube)
+				moves_to_take.append(6)
+				moves_to_take.append(13)
+			fu(cube)
+			fr(cube)
+			fu_(cube)
+			fr_(cube)
+			moves_to_take.append(0)
+			moves_to_take.append(3)
+			moves_to_take.append(6)
+			moves_to_take.append(9)
+
+
+	return moves_to_take
+
+
 def AI():
 	t = pf()
 	n = 0
@@ -174,11 +347,15 @@ def AI():
 
 	moves_to_take = cross()
 	n += np.sum(np.array(moves_to_take)<12)
-	play(moves_to_take, 1)
+	play(moves_to_take, 0)
 
 	moves_to_take = align_cross()
 	n += np.sum(np.array(moves_to_take)<12)
-	play(moves_to_take, 1)
+	play(moves_to_take, 0)
+
+	moves_to_take = corners()
+	n += np.sum(np.array(moves_to_take)<12)
+	play(moves_to_take, 0)
 
 
 
@@ -265,7 +442,7 @@ def shuffle():
 	for i in range(25):
 		x = np.random.randint(0, 12)
 		# animating
-		if 1:
+		if 0:
 			for _ in range(turn_speed):
 				for event in pg.event.get():
 					if event.type == pg.QUIT:
@@ -287,7 +464,6 @@ def shuffle():
 		moves[x](colors)
 
 		draw()
-	print()
 
 # drawing
 def draw_surface(s, v):
@@ -296,14 +472,14 @@ def draw_surface(s, v):
 	for i in range(3):
 		pg.draw.line(win, (32, 32, 32), s[i], s[i+1], 6)
 	pg.draw.line(win, (32, 32, 32), s[0], s[3], 6)
-	# if v==13:
-	# 	t = font.render("Front", True, (0,0,0))
-	# 	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
-	# if v==22:
-	# 	t = font.render("Up", True, (0,0,0))
-	# 	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
-	# t = font.render(str(v), True, (0,0,0))
-	# win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
+	if v==13:
+		t = font.render("Front", True, (0,0,0))
+		win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
+	if v==22:
+		t = font.render("Up", True, (0,0,0))
+		win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
+	t = font.render(str(v), True, (0,0,0))
+	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
 	
 def draw():
 	win.fill((0, 0, 0))
@@ -333,7 +509,6 @@ def project_surfaces(cube):
 	cube[..., 1] = c*h*np.cos(a)
 	cube[..., 2] = c*h*np.sin(a)
 
-	# k = (L/(L + cube[..., 2]*t)).reshape(6, 3, 3, 4, 1)		# perspective factor
 	z = np.mean(cube[..., 2], axis=3).reshape(54)
 	
 	return W//2 + (f*cube[..., :2]/(Zv+cube[..., 2:])).reshape(54, 4, 2), z
@@ -341,9 +516,9 @@ def project_surfaces(cube):
 
 alpha, beta = np.pi/4 + 0.01, -np.pi/4 + 0.01				# default viewing angles
 inc = 0.02													# angle increase on pressing arrow keys
-turn_speed = 25												# MUST BE A POWER OF 5 (5, 25, 125, 625...), less is more (it is actually the number of frames spent per turn)
-wait = 150													# wait (in msec) after some functions
-interval = p_interval = 0									# for changing front-face on rotation
+turn_speed = 25												# MUST BE A POWER OF 5 (5, 25, 125, 625...); less is more (it is actually the number of frames spent per turn)
+wait = 250													# wait (in msec) after some functions
+
 
 while run:
 	for event in pg.event.get():
@@ -360,20 +535,14 @@ while run:
 	elif keyp[pg.K_RIGHT]:
 		alpha -= inc
 
-	if keyp[pg.K_s] and (keyp[pg.K_LSHIFT]or keyp[pg.K_RSHIFT]):
+	if keyp[pg.K_s] and (keyp[pg.K_LSHIFT] or keyp[pg.K_RSHIFT]):
 		shuffle()
 		pg.time.delay(wait)
 
 	if keyp[pg.K_s] and (keyp[pg.K_LCTRL] or keyp[pg.K_RCTRL]):
 		AI()
+		pg.time.delay(wait)
+
 
 	draw()
 
-
-
-""" 
-to add:
-	undo
-	redo
-	AI to solve
-"""
