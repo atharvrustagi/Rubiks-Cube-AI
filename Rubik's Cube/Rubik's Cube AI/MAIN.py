@@ -38,39 +38,54 @@ def play(moves_to_take, anim=True):
 		elif x==13:
 			change_front(1, colors)
 			alpha -= np.pi/2
-		draw()
+		# draw()
 
+solves = 0
+success = 0
 
 def AI():
 	t = pf()
 	n = 0
+	animate = 1
 
 
 	moves_to_take = cross(colors)
 	n += np.sum(np.array(moves_to_take)<12)
-	play(moves_to_take, 1)
+	play(moves_to_take, animate)
 
 	moves_to_take = align_cross(colors)
 	n += np.sum(np.array(moves_to_take)<12)
-	play(moves_to_take, 1)
+	play(moves_to_take, animate)
 
 	moves_to_take = corners(colors)
 	n += np.sum(np.array(moves_to_take)<12)
-	play(moves_to_take, 1)
+	play(moves_to_take, animate)
 
 	moves_to_take = edges(colors)
 	n += np.sum(np.array(moves_to_take)<12)
-	play(moves_to_take, 1)
+	play(moves_to_take, animate)
+
+	moves_to_take = yellow_cross(colors)
+	n += np.sum(np.array(moves_to_take)<12)
+	play(moves_to_take, animate)
+
+	moves_to_take = yellow_face(colors)
+	n += np.sum(np.array(moves_to_take)<12)
+	play(moves_to_take, animate)
+
+	global solves, success
+	solves += 1
+
+	if np.mean(colors[18:27, 1])==238:
+		success += 1
+
+	print(f"{success}/{solves} --  {pf()-t} seconds, {n} moves.")
 
 
 
-	print(f"Took {pf()-t} seconds and {n} moves to solve to the current state.")
-
-
-def shuffle(nums=30):
-	x = np.random.randint(0, 12, size=nums)
-	play(x, 1)
-
+def shuffle(moves=100, animate=0):
+	x = np.random.randint(0, 12, size=moves)
+	play(x, animate)
 
 
 run = True
@@ -153,7 +168,6 @@ def draw_surface(s, v):
 	for i in range(3):
 		pg.draw.line(win, (32, 32, 32), s[i], s[i+1], 6)
 	pg.draw.line(win, (32, 32, 32), s[0], s[3], 6)
-	""" for displaying stats and info for each square"""
 	# if v==13:
 	# 	t = font.render("Front", True, (0,0,0))
 	# 	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
@@ -203,7 +217,16 @@ def project_surfaces(cube):
 alpha, beta = np.pi/4 + 0.01, -np.pi/4 + 0.01				# default viewing angles
 inc = 0.02													# angle increase on pressing arrow keys
 turn_speed = 25												# MUST BE A POWER OF 5 (5, 25, 125, 625...); less is more (it is actually the number of frames spent per turn)
-wait = 350													# wait (in msec) after some functions
+wait = 150													# wait (in msec) after some functions
+
+# for _ in range(100):
+# 	shuffle()
+# 	draw()
+# 	pg.time.delay(5)
+# 	AI()
+# 	draw()
+# 	pg.time.delay(5)
+
 
 while run:
 	for event in pg.event.get():
@@ -228,6 +251,4 @@ while run:
 		AI()
 		pg.time.delay(wait)
 
-
 	draw()
-
