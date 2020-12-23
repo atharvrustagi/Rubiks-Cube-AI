@@ -190,4 +190,4 @@ def change_front(face, colors):
 
 moves_animate = {0:u_animate, 1:d_animate, 2:l_animate, 3:r_animate, 4:f_animate, 5:b_animate}
 moves = {0:fu, 1:fd, 2:fl, 3:fr, 4:ff, 5:fb, 6:fu_, 7:fd_, 8:fl_, 9:fr_, 10:ff_, 11:fb_, 12:change_front}
-
+algo_move = {"U":0, "D":1, "L":2, "R":3, "F":4, "B":5, "U'":6, "D'":7, "L'":8, "R'":9, "F'":10, "B'":11}
