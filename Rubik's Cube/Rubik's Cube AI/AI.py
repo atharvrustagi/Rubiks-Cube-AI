@@ -1,7 +1,6 @@
 import numpy as np
 from Cube_functions import *
 
-"white -> 45 to 53"
 
 side_face_list = [[0, 9], [9, 18], [27, 36], [36, 45]]
 
@@ -133,7 +132,6 @@ def cross(colors):
 
 	return moves_to_take
 
-
 def align_cross(colors):
 	moves_to_take = []
 
@@ -149,7 +147,6 @@ def align_cross(colors):
 		moves_to_take.append(12)
 
 	return moves_to_take
-
 
 def corners(colors):
 	moves_to_take = []
@@ -255,7 +252,6 @@ def corners(colors):
 
 	return moves_to_take
 
-
 def edges(colors):
 	moves_to_take = []
 	cube = np.copy(colors)
@@ -337,5 +333,157 @@ def edges(colors):
 			# taking out the edge
 			algorithm("U' L' U L U F U' F'", moves_to_take, cube)
 
+
 	return moves_to_take
 
+def yellow_cross(colors):
+	moves_to_take = []
+	cube = np.copy(colors)
+
+	# identifying all the yellow edges
+	edges = cube[19:26:2, 1]==238
+
+	# if cross is done
+	if np.all(edges):
+		return []
+
+	# if only centre is yellow
+	if not np.any(edges):
+		algorithm("F R U R' U' F' B U L U' L' B'", moves_to_take, cube)
+		return moves_to_take
+
+	L = True
+	# L-case
+	if edges[0] and edges[1]:
+		pass
+	elif edges[1] and edges[3]:
+		change_front(0, cube)
+		moves_to_take.append(12)
+	elif edges[3] and edges[2]:
+		for _ in range(2):
+			change_front(0, cube)
+			moves_to_take.append(12)
+	elif edges[2] and edges[0]:
+		change_front(1, cube)
+		moves_to_take.append(13)
+	else:
+		L = False
+
+	if L:
+		algorithm("F U R U' R' F'", moves_to_take, cube)
+		return moves_to_take
+
+	# line case
+	if edges[0] and edges[3]:
+		algorithm("F R U R' U' F'", moves_to_take, cube)
+	else:
+		algorithm("R B U B' U' R'", moves_to_take, cube)
+
+	return moves_to_take
+
+def yellow_face(colors):
+	moves_to_take = []
+	cube = np.copy(colors)
+
+	#identifying yellow corners on top
+	corners = cube[[18, 20, 26, 24], 1]==238
+
+	if np.sum(corners)==4:
+		return []
+
+	# if any corner is not yellow 	(2 cases)
+	if np.sum(corners)==0:
+		par_list = [[0, 6], [9, 15], [27, 33], [36, 42]]
+		for i, p in enumerate(par_list):
+			if np.all(cube[p, 1]==238):
+				face = i
+				break
+		if face==0:
+			pass
+		elif face==1:
+			change_front(1, cube)
+			moves_to_take.append(13)
+		elif face==2:
+			for _ in range(2):
+				change_front(1, cube)
+				moves_to_take.append(13)
+		else:
+			change_front(0, cube)
+			moves_to_take.append(12)
+
+		if cube[15, 1]==238:
+			algorithm("R U2 R2 U' R2 U' R2 U2 R", moves_to_take, cube)
+		else:
+			algorithm("R U R' U R U' R' U R U2 R'", moves_to_take, cube)
+
+	# if 3 corners are not yellow 	(2 cases)
+	elif np.sum(corners)==1:
+		# finding the yellow corner
+		if corners[0]:
+			change_front(0, cube)
+			moves_to_take.append(12)
+		elif corners[1]:
+			pass
+		elif corners[3]:
+			for _ in range(2):
+				change_front(0, cube)
+				moves_to_take.append(12)
+		else:
+			change_front(1, cube)
+			moves_to_take.append(13)
+
+		# identifying the case
+		if cube[15, 1]==238:
+			algorithm("R U R' U R 2U R'", moves_to_take, cube)
+		else:
+			algorithm("B' U' B U' B' 2U B", moves_to_take, cube)
+
+	# if 2 corners are not yellow 	(3 cases)
+	elif np.sum(corners)==2:
+
+		face = -1
+		for i in range(4):
+			if corners[i] and corners[(i+1)%4]:
+				face = i
+				break
+
+		if face==0:
+			change_front(1, cube)
+			moves_to_take.append(13)
+		elif face==1:
+			for _ in range(2):
+				change_front(1, cube)
+				moves_to_take.append(13)
+		elif face==2:
+			change_front(0, cube)
+			moves_to_take.append(12)
+		elif face==3:
+			pass
+		if face>=0:
+			if cube[9, 1]==238:
+				algorithm("2R D R' 2U R D' R' 2U R'", moves_to_take, cube)
+			else:
+				algorithm("F R B' R' F' R B R'", moves_to_take, cube)
+
+		if face==-1:
+			for i, k in enumerate([9, 27, 36, 0]):
+				if cube[k, 1]==238:
+					face = i
+					break
+
+			if face==0:
+				pass
+			elif face==1:
+				change_front(1, cube)
+				moves_to_take.append(13)
+			elif face==2:
+				for _ in range(2):
+					change_front(1, cube)
+					moves_to_take.append(13)
+			else:
+				change_front(0, cube)
+				moves_to_take.append(12)
+
+			algorithm("R' F R B' R' F' R B", moves_to_take, cube)
+
+	return moves_to_take
