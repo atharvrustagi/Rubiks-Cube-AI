@@ -114,7 +114,7 @@ def play(moves_to_take, anim=True):
 			alpha -= np.pi/2
 		# draw()
 
-def AI(animate=0):
+def AI(animate=True):
 	t = pf()
 	n = 0
 
