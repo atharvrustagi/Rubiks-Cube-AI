@@ -175,6 +175,14 @@ def turn_face(face, angle, surfaces):
 		moves_animate[face-6](-angle, surfaces)
 
 
+def check_solve(colors):
+	for i in range(0, 6, 9):
+		if np.any(colors[i]!=colors[i:i+9]):
+			return False
+	return True
+
+
+
 lists = [[i for i in range(9)], [i for i in range(9, 18)], [i for i in range(27, 36)], [i for i in range(36, 45)]]
 
 # for changing the front face when cube is rotated
