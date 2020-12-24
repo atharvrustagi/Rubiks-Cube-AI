@@ -25,7 +25,6 @@ def algorithm(algo, moves_to_take, cube):
 			moves[x](cube)
 
 
-
 def cross(colors):
 	s_cube = np.copy(colors)
 
@@ -345,7 +344,7 @@ def yellow_cross(colors):
 
 	# if cross is done
 	if np.all(edges):
-		return []
+		return moves_to_take
 
 	# if only centre is yellow
 	if not np.any(edges):
@@ -389,7 +388,7 @@ def yellow_face(colors):
 	corners = cube[[18, 20, 26, 24], 1]==238
 
 	if np.sum(corners)==4:
-		return []
+		return moves_to_take
 
 	# if any corner is not yellow 	(2 cases)
 	if np.sum(corners)==0:
@@ -487,3 +486,83 @@ def yellow_face(colors):
 			algorithm("R' F R B' R' F' R B", moves_to_take, cube)
 
 	return moves_to_take
+
+def pll_corners(colors):
+	moves_to_take = []
+	cube = np.copy(colors)
+
+	while True:
+		# checking for headlights
+		heads = np.array([np.all(cube[36]==cube[42]), np.all(cube[0]==cube[6]), np.all(cube[9]==cube[15]), np.all(cube[27]==cube[33])])
+		
+		# if all corners are aligned
+		if np.sum(heads)==4:
+			return moves_to_take
+
+		face = np.argmax(heads)
+
+		if face==0:
+			pass
+		elif face==1:
+			change_front(1, cube)
+			moves_to_take.append(13)
+		elif face==2:
+			for _ in range(2):
+				change_front(0, cube)
+				moves_to_take.append(12)
+		elif face==3:
+			change_front(0, cube)
+			moves_to_take.append(12)
+
+		algorithm("R' F R' 2B R F' R' 2B 2R", moves_to_take, cube)
+
+def pll_edges(colors):
+	moves_to_take = []
+	cube = np.copy(colors)
+
+	edges = np.array([np.all(cube[12]==cube[15]), np.all(cube[3]==cube[6]), np.all(cube[39]==cube[42]), np.all(cube[30]==cube[33])])
+	# if all edges are correct
+	if np.sum(edges)==4:
+		pass
+
+	else:
+		# if all edges are incorrect
+		if np.sum(edges)==0:
+			algorithm("2F U R' L 2F L' R U 2F", moves_to_take, cube)
+		
+		edges = np.array([np.all(cube[39]==cube[42]), np.all(cube[12]==cube[15]), np.all(cube[3]==cube[6]), np.all(cube[30]==cube[33])])
+		
+		face = np.argmax(edges)
+
+		if face==0:
+			pass
+		elif face==1:
+			for _ in range(2):
+				change_front(1, cube)
+				moves_to_take.append(13)
+		elif face==2:
+			change_front(1, cube)
+			moves_to_take.append(13)
+		elif face==3:
+			change_front(0, cube)
+			moves_to_take.append(12)
+
+		if np.all(cube[12]==cube[27]):
+			algorithm("2F U' R' L 2F L' R U' 2F", moves_to_take, cube)
+		else:
+			algorithm("2F U R' L 2F L' R U 2F", moves_to_take, cube)
+
+	# aligning the top face
+	face = np.argmax(np.min(cube[12]==cube[[13, 31, 40, 4]], axis=1))
+
+	if face==0:
+		pass
+	elif face==1:
+		algorithm("U'", moves_to_take, cube)
+	elif face==2:
+		algorithm("2U", moves_to_take, cube)
+	elif face==3:
+		algorithm("U", moves_to_take, cube)
+
+	return moves_to_take
+
