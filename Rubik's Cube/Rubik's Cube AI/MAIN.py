@@ -8,86 +8,6 @@ from AI import *
 _ = system("cls")
 
 
-def play(moves_to_take, anim=True):
-	global alpha, beta
-	for x in moves_to_take:
-		if x<12:
-			if anim:
-				for _ in range(turn_speed):
-					for event in pg.event.get():
-						if event.type == pg.QUIT:
-							exit()
-
-					keyp = pg.key.get_pressed()
-					if keyp[pg.K_UP]:
-						beta += inc
-					elif keyp[pg.K_DOWN]:
-						beta -= inc
-					if keyp[pg.K_LEFT]:
-						alpha += inc
-					elif keyp[pg.K_RIGHT]:
-						alpha -= inc
-					turn_face(x, np.pi/turn_speed/2, surfaces)
-					draw()
-				turn_face(x, -np.pi/2, surfaces)
-
-			moves[x](colors)
-		elif x==12:
-			change_front(0, colors)
-			alpha += np.pi/2
-		elif x==13:
-			change_front(1, colors)
-			alpha -= np.pi/2
-		# draw()
-
-solves = 0
-success = 0
-
-def AI():
-	t = pf()
-	n = 0
-	animate = 1
-
-
-	moves_to_take = cross(colors)
-	n += np.sum(np.array(moves_to_take)<12)
-	play(moves_to_take, animate)
-
-	moves_to_take = align_cross(colors)
-	n += np.sum(np.array(moves_to_take)<12)
-	play(moves_to_take, animate)
-
-	moves_to_take = corners(colors)
-	n += np.sum(np.array(moves_to_take)<12)
-	play(moves_to_take, animate)
-
-	moves_to_take = edges(colors)
-	n += np.sum(np.array(moves_to_take)<12)
-	play(moves_to_take, animate)
-
-	moves_to_take = yellow_cross(colors)
-	n += np.sum(np.array(moves_to_take)<12)
-	play(moves_to_take, animate)
-
-	moves_to_take = yellow_face(colors)
-	n += np.sum(np.array(moves_to_take)<12)
-	play(moves_to_take, animate)
-
-	global solves, success
-	solves += 1
-
-	if np.mean(colors[18:27, 1])==238:
-		success += 1
-
-	print(f"{success}/{solves} --  {pf()-t} seconds, {n} moves.")
-
-
-
-def shuffle(moves=100, animate=0):
-	x = np.random.randint(0, 12, size=moves)
-	play(x, animate)
-
-
 run = True
 W = 1000
 theta = np.pi/2
@@ -97,7 +17,6 @@ win = pg.display.set_mode((W, W))
 pg.display.set_caption("Rubik's Cube AI")
 pg.font.init()
 font = pg.font.SysFont("georgia", 20)
-
 
 
 # creating the cube
@@ -143,7 +62,6 @@ surfaces[5, ..., 1] += 6*s
 surfaces[5, ..., 0] *= -1
 
 
-
 """
 initial parameters:
 0 -> left, red
@@ -159,7 +77,90 @@ colors = np.zeros((54, 3))
 for i in clrs.keys():
 	colors[i*9:i*9+9] = clrs[i]
 
-instructions = ["Shuffle: SHIFT + S", "Solve: CTRL + S"]
+instructions = ["Shuffle: SHIFT + S", "Solve: CTRL + S", "Rotate Cube: Arrow Keys"]
+
+solves = 0
+success = 0
+
+def play(moves_to_take, anim=True):
+	global alpha, beta
+	for x in moves_to_take:
+		if x<12:
+			if anim:
+				for _ in range(turn_speed):
+					for event in pg.event.get():
+						if event.type == pg.QUIT:
+							exit()
+
+					keyp = pg.key.get_pressed()
+					if keyp[pg.K_UP]:
+						beta += inc
+					elif keyp[pg.K_DOWN]:
+						beta -= inc
+					if keyp[pg.K_LEFT]:
+						alpha += inc
+					elif keyp[pg.K_RIGHT]:
+						alpha -= inc
+					turn_face(x, np.pi/turn_speed/2, surfaces)
+					draw()
+				turn_face(x, -np.pi/2, surfaces)
+
+			moves[x](colors)
+		elif x==12:
+			change_front(0, colors)
+			alpha += np.pi/2
+		elif x==13:
+			change_front(1, colors)
+			alpha -= np.pi/2
+		# draw()
+
+def AI(animate=0):
+	t = pf()
+	n = 0
+
+	moves_to_take = cross(colors)
+	n += np.sum(np.array(moves_to_take)<12)
+	play(moves_to_take, animate)
+
+	moves_to_take = align_cross(colors)
+	n += np.sum(np.array(moves_to_take)<12)
+	play(moves_to_take, animate)
+
+	moves_to_take = corners(colors)
+	n += np.sum(np.array(moves_to_take)<12)
+	play(moves_to_take, animate)
+
+	moves_to_take = edges(colors)
+	n += np.sum(np.array(moves_to_take)<12)
+	play(moves_to_take, animate)
+
+	moves_to_take = yellow_cross(colors)
+	n += np.sum(np.array(moves_to_take)<12)
+	play(moves_to_take, animate)
+
+	moves_to_take = yellow_face(colors)
+	n += np.sum(np.array(moves_to_take)<12)
+	play(moves_to_take, animate)
+
+	moves_to_take = pll_corners(colors)
+	n += np.sum(np.array(moves_to_take)<12)
+	play(moves_to_take, animate)
+
+	moves_to_take = pll_edges(colors)
+	n += np.sum(np.array(moves_to_take)<12)
+	play(moves_to_take, animate)
+
+	global solves, success
+	solves += 1
+
+	if check_solve(colors):
+		success += 1
+
+	print(f"{success}/{solves} --  {round((pf()-t)*1, 3)} seconds, {n} moves.")
+
+def shuffle(moves=50, animate=True):
+	x = np.random.randint(0, 12, size=moves)
+	play(x, animate)
 
 # drawing
 def draw_surface(s, v):
@@ -168,14 +169,16 @@ def draw_surface(s, v):
 	for i in range(3):
 		pg.draw.line(win, (32, 32, 32), s[i], s[i+1], 6)
 	pg.draw.line(win, (32, 32, 32), s[0], s[3], 6)
-	# if v==13:
-	# 	t = font.render("Front", True, (0,0,0))
-	# 	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
-	# if v==22:
-	# 	t = font.render("Up", True, (0,0,0))
-	# 	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
-	# t = font.render(str(v), True, (0,0,0))
-	# win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
+	"""details of each square
+	if v==13:
+		t = font.render("Front", True, (0,0,0))
+		win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
+	if v==22:
+		t = font.render("Up", True, (0,0,0))
+		win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
+	t = font.render(str(v), True, (0,0,0))
+	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
+	"""
 	
 def draw():
 	win.fill((0, 0, 0))
@@ -190,8 +193,8 @@ def draw():
 		v = dc[k]
 		draw_surface(cube[v], v)
 
-	for i in range(2):
-		text = font.render(instructions[i], True, (255, 255, 255))
+	for i, t in enumerate(instructions):
+		text = font.render(t, True, (255, 255, 255))
 		win.blit(text, (10, i*30 + 10))
 
 	pg.display.update()
@@ -219,7 +222,7 @@ inc = 0.02													# angle increase on pressing arrow keys
 turn_speed = 25												# MUST BE A POWER OF 5 (5, 25, 125, 625...); less is more (it is actually the number of frames spent per turn)
 wait = 150													# wait (in msec) after some functions
 
-# for _ in range(100):
+# for _ in range(50):
 # 	shuffle()
 # 	draw()
 # 	pg.time.delay(5)
@@ -252,3 +255,4 @@ while run:
 		pg.time.delay(wait)
 
 	draw()
+
