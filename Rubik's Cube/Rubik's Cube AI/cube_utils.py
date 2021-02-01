@@ -2,6 +2,7 @@ import pygame as pg
 import numpy as np
 import kociemba as kc
 from time import perf_counter as pf
+from Cube_functions import *
 
 
 # clrs = {0:(255, 0, 38), 1:(36, 255, 50), 2:(255, 238, 0), 3:(255, 100, 0), 4:(21, 113, 243), 5:(255, 255, 255)}
@@ -34,6 +35,8 @@ def changes(os, ns):
 		return (0, 1)
 	if os==6 and ns==5:
 		return (0, -1)
+	if ns==7:
+		return (0, 0)
 
 def create_cube(side = 50):
 	s = side
@@ -105,6 +108,7 @@ font = pg.font.SysFont("georgia", 20)
 
 state1_ins = font.render("Hold the Cube with Yellow face in front and Blue face on top", True, BLACK)
 use_arrow_keys = font.render("Use Arrow keys to scout the cube", True, BLACK)
+next_warning = font.render("If the 'Next' button doesn't work, the colors are invalid", True, BLACK)
 solving_text = font.render("Solving... (this will take at max 10 seconds)", True, BLACK)
 np_width = 150
 np_height = 75
@@ -131,7 +135,6 @@ def draw_color_buttons(win, s):
 """
 changes:
 yellow - green - orange - blue - red - white
-
 cube start -> (225, 255)
 cube mid1  -> (308, 308)
 cube mid2  -> (392, 392)
@@ -166,7 +169,7 @@ def mouse_action(pos, scolor, state, colors):
 		if np_coors[0, 0] <= pos[0] <= np_coors[0, 0] + np_width:			
 			return scolor, (state-1) if state>1 else 1
 		elif np_coors[1, 0] <= pos[0] <= np_coors[1, 0] + np_width:		
-			return scolor, state+1
+			return scolor, (state+1)# if state<6 else state
 
 	# color selection
 	if 850 <= pos[0] <= 900:
@@ -181,28 +184,24 @@ def solve_cube(colors):
 	sol = kc.solve(s)
 	return sol, pf()-t
 
-# s = "UFUFURBDFDDLURUUULRFLLFRFDBRBLRDLBDBRRULLBRBDFUFBBFDLD"
-# _, t = solve(s)
-# print("\n\nSolved in " + str(t) + " seconds")
-
 def color_to_str(colors):
 	s = ""
-	for c in colors[18:27]:
+	for c in colors[[18,21,24,19,22,25,20,23,26]]:
 		s += clrs_rev[np.sum(c)]
 
-	for c in colors[27:36]:
+	for c in colors[[27,30,33,28,31,34,29,32,35]]:
 		s += clrs_rev[np.sum(c)]
 
-	for c in colors[9:18]:
+	for c in colors[[9,12,15,10,13,16,11,14,17]]:
 		s += clrs_rev[np.sum(c)]
 
-	for c in colors[53:44:-1]:
+	for c in colors[[53,50,47,52,49,46,51,48,45]]:
 		s += clrs_rev[np.sum(c)]
 
-	for c in colors[:9]:
+	for c in colors[[0,3,6,1,4,7,2,5,8]]:
 		s += clrs_rev[np.sum(c)]
 
-	for c in colors[36:45]:
+	for c in colors[[36,39,42,37,40,43,38,41,44]]:
 		s += clrs_rev[np.sum(c)]
 
 	# mapping
@@ -221,11 +220,21 @@ def color_to_str(colors):
 		elif c=='b':
 			ns += 'B'
 
+	# print(s)
+	# print(ns)
 	return ns
-
-
-# col = init_colors()
-# print(color_to_str(col))
 
 # green - front
 # yellow - top
+
+
+def algorithm(move, moves_to_take):
+	l = move
+	if len(l) > 1 and l[1]=='2':
+		for _ in range(2):
+			x = algo_move[l[0]]
+			moves_to_take.append(x)
+	else:
+		x = algo_move[l]
+		moves_to_take.append(x)
+
