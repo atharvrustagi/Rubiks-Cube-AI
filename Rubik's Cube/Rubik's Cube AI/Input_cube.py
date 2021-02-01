@@ -1,6 +1,7 @@
 import pygame as pg
 import numpy as np
 from cube_utils import *
+# import kociemba
 # from draw_utils import *
 
 WIN_SIZE = (1000, 700)
@@ -13,19 +14,11 @@ colors = init_colors()
 # field of view params
 f, Zv = create_params(WIN_SIZE[1], theta=np.pi/2, Zv=1000)
 turn_speed = 100
-key_press = False
-key_count = 0
 alpha, beta = 1e-3, -np.pi/2 + 1e-3
 dalpha, dbeta = 0, 0
 selected_color = 'r'
 state = 1
 
-"""
-cube start -> (225, 255)
-cube mid1  -> (308, 308)
-cube mid2  -> (392, 392)
-cube end   -> (475, 475)
-"""
 
 def draw(win):
 	win.fill(WHITE)
@@ -38,12 +31,14 @@ def draw(win):
 	for k in reversed(z):
 		v = dc[k]
 		draw_surface(tmp_cube[v], v)
-	draw_color_buttons(win, selected_color)
-	draw_prev_next(win)
-	if state==1:
-		win.blit(state1_ins, (80, 100))
 
-	win.blit(use_arrow_keys, (200, 130))
+	draw_color_buttons(win, selected_color)
+	
+	if state<6:
+		draw_prev_next(win)
+		if state==1:
+			win.blit(state1_ins, (80, 100))
+		win.blit(use_arrow_keys, (200, 130))
 
 	pg.display.update()
 
@@ -54,14 +49,8 @@ def draw_surface(s, v):
 		pg.draw.line(win, (32, 32, 32), s[i], s[i+1], 3)
 	pg.draw.line(win, (32, 32, 32), s[0], s[3], 3)
 	# details of each square
-	# if v==13:
-	# 	t = font.render("Front", True, (0,0,0))
-	# 	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
-	# if v==22:
-	# 	t = font.render("Up", True, (0,0,0))
-	# 	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
-	t = font.render(str(v), True, (0,0,0))
-	win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
+	# t = font.render(str(v), True, (0,0,0))
+	# win.blit(t, np.mean(s, axis=0)-np.array([t.get_width()/2, t.get_height()/2]))
 
 def project_surfaces(cube):
 	h = (cube[..., 0]**2 + cube[..., 2]**2)**0.5
@@ -114,9 +103,9 @@ while True:
 		if event.type==pg.QUIT:
 			pg.quit()
 			exit()
-		elif event.type==pg.MOUSEBUTTONDOWN:
+		elif event.type==pg.MOUSEBUTTONDOWN and state<6:
 			pos = pg.mouse.get_pos()
-			selected_color, new_state = mouse_action(pos, selected_color, state)
+			selected_color, new_state = mouse_action(pos, selected_color, state, colors)
 			if state != new_state:
 				state_change(state, new_state)
 				state = new_state
