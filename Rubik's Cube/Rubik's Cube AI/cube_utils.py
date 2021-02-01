@@ -10,12 +10,6 @@ BLUE = (21, 113, 243)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-"""
-changes:
-yellow - green - orange - blue - red - white
-"""
-
-
 def changes(os, ns):
 	if os==1 and ns==2:
 		return (0, 1)
@@ -90,7 +84,7 @@ clrs = {'r':(255, 0, 38), 'g':(36, 255, 50), 'y':(255, 238, 0),
 		'o':(255, 100, 0), 'b':(21, 113, 243), 'w':(255, 255, 255)}
 
 def init_colors():
-	colors = np.zeros((54, 3))
+	colors = np.zeros((54, 3), dtype=np.uint8)
 	for i, k in enumerate(clrs.keys()):
 		colors[i*9:i*9+9] = clrs[k]
 	return colors
@@ -127,16 +121,49 @@ def draw_color_buttons(win, s):
 	pg.draw.rect(win, BLACK, (color_buttons[s][0]-3, 
 			color_buttons[s][1]-3, button_size+5, button_size+5), 5)
 
+"""
+changes:
+yellow - green - orange - blue - red - white
 
-def mouse_action(pos, scolor, state):
+cube start -> (225, 255)
+cube mid1  -> (308, 308)
+cube mid2  -> (392, 392)
+cube end   -> (475, 475)
+"""
+
+pos_list = [225, 308, 392, 475]
+
+def change_color(colors, pos, scolor, state):
+	# print("clicked")
+	for i in range(len(pos_list)-1):
+		if pos_list[i] <= pos[0] <= pos_list[i+1]:
+			for j in range(len(pos_list)-1):
+				if pos_list[j] <= pos[1] <= pos_list[j+1] and (i!=1 or j!=1):
+					colors[state_color_list[state, i*3+j]] = clrs[scolor]
+
+
+state_color_list = np.array([[i for i in range(18, 27)],
+							 [i for i in range(9, 18)],
+							 [i for i in range(27, 36)],
+							 [i for i in range(36, 45)],
+							 [i for i in range(9)],
+							 [51,48,45,52,49,46,53,50,47]])
+
+
+def mouse_action(pos, scolor, state, colors):
+	# cube input
+	if (225 < pos[0] < 475) and (225 < pos[1] < 475):
+		change_color(colors, pos, scolor, state-1)
+		return scolor, state
+
+	# previous next
 	if np_coors[0, 1] <= pos[1] <= np_coors[0, 1] + np_height:
-		if np_coors[0, 0] <= pos[0] <= np_coors[0, 0] + np_width:
-			print("Previous")
+		if np_coors[0, 0] <= pos[0] <= np_coors[0, 0] + np_width:			
 			return scolor, (state-1) if state>1 else 1
-		elif np_coors[1, 0] <= pos[0] <= np_coors[1, 0] + np_width:
-			print("Next")
-			return scolor, (state+1) if state<6 else 6
+		elif np_coors[1, 0] <= pos[0] <= np_coors[1, 0] + np_width:		
+			return scolor, state+1
 
+	# color selection
 	if 850 <= pos[0] <= 900:
 		for k in color_buttons.keys():
 			if color_buttons[k][1] <= pos[1] <= color_buttons[k][1] + 50:
