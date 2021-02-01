@@ -1,5 +1,8 @@
 import pygame as pg
 import numpy as np
+import kociemba as kc
+from time import perf_counter as pf
+
 
 # clrs = {0:(255, 0, 38), 1:(36, 255, 50), 2:(255, 238, 0), 3:(255, 100, 0), 4:(21, 113, 243), 5:(255, 255, 255)}
 RED = (255, 0, 38)
@@ -83,6 +86,8 @@ def create_params(W, theta, Zv):
 clrs = {'r':(255, 0, 38), 'g':(36, 255, 50), 'y':(255, 238, 0), 
 		'o':(255, 100, 0), 'b':(21, 113, 243), 'w':(255, 255, 255)}
 
+clrs_rev = {np.sum(clrs[k]):k for k in clrs.keys()}
+
 def init_colors():
 	colors = np.zeros((54, 3), dtype=np.uint8)
 	for i, k in enumerate(clrs.keys()):
@@ -92,6 +97,7 @@ def init_colors():
 color_buttons = {'r':np.array([850, 300]), 'g':np.array([850, 350]), 'b':np.array([850, 400]),
 				 'o':np.array([850, 450]), 'y':np.array([850, 500]), 'w':np.array([850, 550])}
 
+# color button
 button_size = 50
 
 pg.font.init()
@@ -99,6 +105,7 @@ font = pg.font.SysFont("georgia", 20)
 
 state1_ins = font.render("Hold the Cube with Yellow face in front and Blue face on top", True, BLACK)
 use_arrow_keys = font.render("Use Arrow keys to scout the cube", True, BLACK)
+solving_text = font.render("Solving... (this will take at max 10 seconds)", True, BLACK)
 np_width = 150
 np_height = 75
 prev_text = font.render("Previous", True, WHITE)
@@ -141,14 +148,12 @@ def change_color(colors, pos, scolor, state):
 				if pos_list[j] <= pos[1] <= pos_list[j+1] and (i!=1 or j!=1):
 					colors[state_color_list[state, i*3+j]] = clrs[scolor]
 
-
 state_color_list = np.array([[i for i in range(18, 27)],
 							 [i for i in range(9, 18)],
 							 [i for i in range(27, 36)],
 							 [i for i in range(36, 45)],
 							 [i for i in range(9)],
 							 [51,48,45,52,49,46,53,50,47]])
-
 
 def mouse_action(pos, scolor, state, colors):
 	# cube input
@@ -170,3 +175,57 @@ def mouse_action(pos, scolor, state, colors):
 				return k, state
 	return scolor, state
 
+def solve_cube(colors):
+	t = pf()
+	s = color_to_str(colors)
+	sol = kc.solve(s)
+	return sol, pf()-t
+
+# s = "UFUFURBDFDDLURUUULRFLLFRFDBRBLRDLBDBRRULLBRBDFUFBBFDLD"
+# _, t = solve(s)
+# print("\n\nSolved in " + str(t) + " seconds")
+
+def color_to_str(colors):
+	s = ""
+	for c in colors[18:27]:
+		s += clrs_rev[np.sum(c)]
+
+	for c in colors[27:36]:
+		s += clrs_rev[np.sum(c)]
+
+	for c in colors[9:18]:
+		s += clrs_rev[np.sum(c)]
+
+	for c in colors[53:44:-1]:
+		s += clrs_rev[np.sum(c)]
+
+	for c in colors[:9]:
+		s += clrs_rev[np.sum(c)]
+
+	for c in colors[36:45]:
+		s += clrs_rev[np.sum(c)]
+
+	# mapping
+	ns = ""
+	for c in s:
+		if c=='y':
+			ns += 'U'
+		elif c=='g':
+			ns += 'F'
+		elif c=='r':
+			ns += 'L'
+		elif c=='o':
+			ns += 'R'
+		elif c=='w':
+			ns += 'D'
+		elif c=='b':
+			ns += 'B'
+
+	return ns
+
+
+# col = init_colors()
+# print(color_to_str(col))
+
+# green - front
+# yellow - top
