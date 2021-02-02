@@ -1,15 +1,14 @@
 import pygame as pg
 import numpy as np
 from time import perf_counter as pf
-from Cube_functions import *
 from os import system
+from Cube_functions import *
 from AI import *
 
 _ = system("cls")
 
 
-run = True
-W = 1000
+W = 700
 theta = np.pi/2		# field of view
 Zv = 1000
 f = W/np.tan(theta/2)
@@ -63,7 +62,7 @@ surfaces[5, ..., 0] *= -1
 
 
 """
-initial parameters:
+initial faces:
 0 -> left, red
 1 -> front, green
 2 -> top, yellow
@@ -81,8 +80,9 @@ instructions = ["Shuffle: S", "Solve: A", "Rotate Cube: Arrow Keys"]
 
 solves = 0
 success = 0
+avgf2l = avgcrs = avgoll = avgpll = avg = 0.0
 
-def play(moves_to_take, anim=True):
+def play(moves_to_take, anim):
 	global alpha, beta
 	for x in moves_to_take:
 		if x<12:
@@ -117,49 +117,69 @@ def play(moves_to_take, anim=True):
 def AI(animate=True):
 	t = pf()
 	n = 0
+	pll = 0
+	f2l = 0
+	crs = 0
+	oll  = 0
 
 	if not check_solve(colors):
 		moves_to_take = cross(colors)
 		n += np.sum(np.array(moves_to_take)<12)
+		crs += np.sum(np.array(moves_to_take)<12)
 		play(moves_to_take, animate)
 
 		moves_to_take = align_cross(colors)
 		n += np.sum(np.array(moves_to_take)<12)
+		crs += np.sum(np.array(moves_to_take)<12)
 		play(moves_to_take, animate)
 
 		moves_to_take = corners(colors)
 		n += np.sum(np.array(moves_to_take)<12)
+		f2l += np.sum(np.array(moves_to_take)<12)
 		play(moves_to_take, animate)
 
 		moves_to_take = edges(colors)
 		n += np.sum(np.array(moves_to_take)<12)
+		f2l += np.sum(np.array(moves_to_take)<12)
 		play(moves_to_take, animate)
 
 		moves_to_take = yellow_cross(colors)
 		n += np.sum(np.array(moves_to_take)<12)
+		oll += np.sum(np.array(moves_to_take)<12)
 		play(moves_to_take, animate)
 
 		moves_to_take = yellow_face(colors)
 		n += np.sum(np.array(moves_to_take)<12)
+		oll += np.sum(np.array(moves_to_take)<12)
 		play(moves_to_take, animate)
 
 		moves_to_take = pll_corners(colors)
 		n += np.sum(np.array(moves_to_take)<12)
+		pll += np.sum(np.array(moves_to_take)<12)
 		play(moves_to_take, animate)
 
 		moves_to_take = pll_edges(colors)
 		n += np.sum(np.array(moves_to_take)<12)
+		pll += np.sum(np.array(moves_to_take)<12)
 		play(moves_to_take, animate)
 
-	global solves, success
+	t = pf()-t
+
+	global solves, success, avgf2l, avgcrs, avgoll, avgpll, avg
 	solves += 1
 
 	if check_solve(colors):
 		success += 1
 
-	print(f"{success}/{solves} --  {round((pf()-t)*1, 3)} seconds, {n} moves.")
+	avgf2l += f2l
+	avgcrs += crs
+	avgoll += oll
+	avgpll += pll
+	avg += n
 
-def shuffle(moves=50, animate=True):
+	print(f"{success}/{solves} --  {round(t*1, 3)} seconds, {n} moves. Cross: {crs}, F2L: {f2l}, OLL: {oll}, PLL: {pll}")
+
+def shuffle(animate=True, moves=50):
 	x = np.random.randint(0, 12, size=moves)
 	play(x, animate)
 
@@ -182,12 +202,10 @@ def draw_surface(s, v):
 	"""
 	
 def draw():
-	win.fill((0, 0, 0))
+	win.fill(((0, 0, 0)))
 	cube, z = project_surfaces(np.copy(surfaces))
 
-	dc = dict()
-	for x in range(54):
-		dc[z[x]] = x
+	dc = {z[x] : x for x in range(54)}
 	z.sort()
 
 	for k in reversed(z):
@@ -223,27 +241,30 @@ inc = 0.02													# angle increase on pressing arrow keys
 turn_speed = 25												# MUST BE A POWER OF 5 (5, 25, 125, 625...); less is more (it is actually the number of frames spent per turn)
 wait = 150													# wait (in msec) after some functions
 
-# for _ in range(50):
-# 	shuffle()
-# 	draw()
-# 	pg.time.delay(5)
-# 	AI()
-# 	draw()
-# 	pg.time.delay(5)
+# its = 100
+# for _ in range(its):
+# 	shuffle(False)
+# 	# draw()
+# 	pg.time.delay(15)
+# 	AI(False)
+# 	# draw()
+# 	pg.time.delay(15)
 
-while run:
+# print(f"\nAVERAGE MOVES -- Cross: {round(avgcrs/its)}, F2L: {round(avgf2l/its)}, OLL: {round(avgoll/its)}, PLL: {round(avgpll/its)}, Total: {round(avg/its)}\n")
+
+while True:
 	for event in pg.event.get():
 		if event.type == pg.QUIT:
-			run = False
+			exit()
 	keyp = pg.key.get_pressed()
 
 	if keyp[pg.K_UP]:
 		beta += inc
-	elif keyp[pg.K_DOWN]:
+	if keyp[pg.K_DOWN]:
 		beta -= inc
 	if keyp[pg.K_LEFT]:
 		alpha += inc
-	elif keyp[pg.K_RIGHT]:
+	if keyp[pg.K_RIGHT]:
 		alpha -= inc
 
 	if keyp[pg.K_s]: # and (keyp[pg.K_LSHIFT] or keyp[pg.K_RSHIFT]):
