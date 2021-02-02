@@ -19,9 +19,10 @@ alpha, beta = 1e-3, -np.pi/2 + 1e-3
 dalpha, dbeta = 0, 0
 selected_color = 'r'
 state = 1
-solved = False
+solved_state = 0
 ang_changed = False
 move_counter = 0
+error = ""
 
 
 def draw():
@@ -37,17 +38,19 @@ def draw():
 		draw_surface(tmp_cube[v], v)
 
 	draw_color_buttons(win, selected_color)
+
+	global solved_state
 	
-	if not solved:
+	if solved_state==0:
 		if state<=6:
 			draw_prev_next(win)
 			if state==1:
 				win.blit(state1_ins, (80, 70))
 			win.blit(use_arrow_keys, (200, 100))
-			win.blit(next_warning, (WIN_SIZE[1]//2-next_warning.get_width()//2, 130))
+			# win.blit(next_warning, (WIN_SIZE[1]//2-next_warning.get_width()//2, 130))
 		else:
 			win.blit(solving_text, (170, 130))
-	else:
+	elif solved_state==1:
 		ins_text = font.render("Hold the cube with green face in front and yellow face on top", True, BLACK)
 		win.blit(ins_text, (WIN_SIZE[1]//2-ins_text.get_width()//2, 100))
 		ins_text = font.render("Click anywhere to take a move", True, BLACK)
@@ -61,6 +64,13 @@ def draw():
 		if not ang_changed:
 			ang_changed = True
 			change_angle()
+	else:
+		text = font.render(error, True, BLACK)
+		win.blit(text, (WIN_SIZE[1]//2-text.get_width()//2, 100))
+		win.blit(invalid_text, ((WIN_SIZE[1]//2-invalid_text.get_width()//2, 130)))
+		pg.display.update()
+		pg.time.delay(2000)
+		solved_state = 0
 
 	pg.display.update()
 
@@ -100,7 +110,7 @@ def key_action(keys):
 		dalpha += np.pi/2/turn_speed
 	elif keys[pg.K_RIGHT] and dalpha >= -np.pi/2:
 		dalpha -= np.pi/2/turn_speed
-	elif not solved:
+	elif solved_state==0:
 		if dalpha>1e-3:
 			dalpha -= np.pi/2/turn_speed
 		elif dalpha<-1e-3:
@@ -173,23 +183,25 @@ while True:
 			if state != new_state:
 				state_change(state, new_state)
 				state = new_state
-		elif event.type==pg.MOUSEBUTTONDOWN and solved and move_counter < len(sol_list):
+		elif event.type==pg.MOUSEBUTTONDOWN and solved_state==1 and move_counter < len(sol_list):
 			play(sol_list[move_counter])
 			move_counter += 1
 
 	keys = pg.key.get_pressed()
 	key_action(keys)
 
-	if state>6 and not solved:
+	if state>6 and solved_state==0:
 		try:
 			solution, time = solve_cube(colors)
 			sol_list = solution.split(' ')
 			print(solution)
-			solved = True
-		except:
-			print("Invalid cube. Enter again")
+			solved_state = 1
+		except Exception as e:
+			error = str(e)
+			print(error)
 			state = 6
-	elif solved:
+			solved_state = -1
+	elif solved_state==1:
 		pass
 	draw()
 
