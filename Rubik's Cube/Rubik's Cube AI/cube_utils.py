@@ -110,6 +110,7 @@ state1_ins = font.render("Hold the Cube with Yellow face in front and Blue face 
 use_arrow_keys = font.render("Use Arrow keys to scout the cube", True, BLACK)
 next_warning = font.render("If the 'Next' button doesn't work, the colors are invalid", True, BLACK)
 solving_text = font.render("Solving... (this will take at max 10 seconds)", True, BLACK)
+invalid_text = font.render("Invalid cube state. Verify the colors", True, BLACK)
 np_width = 150
 np_height = 75
 prev_text = font.render("Previous", True, WHITE)
@@ -133,15 +134,28 @@ def draw_color_buttons(win, s):
 			color_buttons[s][1]-3, button_size+5, button_size+5), 5)
 
 """
-changes:
+input:
 yellow - green - orange - blue - red - white
+
+solving:
+# green - front
+# yellow - top
+
 cube start -> (225, 255)
 cube mid1  -> (308, 308)
 cube mid2  -> (392, 392)
 cube end   -> (475, 475)
+
 """
 
 pos_list = [225, 308, 392, 475]
+
+state_color_list = np.array([[i for i in range(18, 27)],
+							 [i for i in range(9, 18)],
+							 [i for i in range(27, 36)],
+							 [i for i in range(36, 45)],
+							 [i for i in range(9)],
+							 [51,48,45,52,49,46,53,50,47]])
 
 def change_color(colors, pos, scolor, state):
 	# print("clicked")
@@ -150,13 +164,6 @@ def change_color(colors, pos, scolor, state):
 			for j in range(len(pos_list)-1):
 				if pos_list[j] <= pos[1] <= pos_list[j+1] and (i!=1 or j!=1):
 					colors[state_color_list[state, i*3+j]] = clrs[scolor]
-
-state_color_list = np.array([[i for i in range(18, 27)],
-							 [i for i in range(9, 18)],
-							 [i for i in range(27, 36)],
-							 [i for i in range(36, 45)],
-							 [i for i in range(9)],
-							 [51,48,45,52,49,46,53,50,47]])
 
 def mouse_action(pos, scolor, state, colors):
 	# cube input
@@ -223,10 +230,6 @@ def color_to_str(colors):
 	# print(s)
 	# print(ns)
 	return ns
-
-# green - front
-# yellow - top
-
 
 def algorithm(move, moves_to_take):
 	l = move
