@@ -5,15 +5,14 @@ Simple application for practicing a Rubik's cube.
 
 Change Cube Angle : Arrow keys (UP, DOWN, LEFT, RIGHT)
 
-Moves : F, B, R, L, U, D, SHIFT + F, SHIFT + B, SHIFT + R, SHIFT + L, SHIFT + U, SHIFT + D
+Shuffle : S
 
-Shuffle : SHIFT + S
-
-Solve : CTRL + S
+Solve using Beginner (CFOP) method : A
 
 
 **Requirements**
 
 Software -> Python
 
-Packages -> Numpy, PyGame
+Packages -> Numpy   (for calculations)
+            PyGame  (for graphics)
